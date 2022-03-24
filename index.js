@@ -56,13 +56,13 @@ clientDiscordBot.once("ready", () => {
 });
 
 (async ()  => {
-    await pubSubClient.onRedemption(await pubSubClient.registerUserListener(authProvider), (message: PubSubRedemptionMessage) => {
+    await pubSubClient.onRedemption(await pubSubClient.registerUserListener(authProvider), (message) => {
         if(message.rewardId == process.env.TWITCH_1000_XP_ID){
             if(regexExpression.test(message.message)){
                 const discordUser = clientDiscordBot.users.cache.find(u => u.tag === message.message);
                 if(discordUser != undefined && discordUser != null){
                     userBotClientDiscord.send(process.env.DISCORD_CHANNEL_REWARDS_ID,{ content:`.addxp <@${discordUser.id}> 1000`}).then(() => {
-                        const REWARD_CHANNEL : any = clientDiscordBot.channels.cache.get(process.env.DISCORD_CHANNEL_REWARDS_ID);
+                        const REWARD_CHANNEL = clientDiscordBot.channels.cache.get(process.env.DISCORD_CHANNEL_REWARDS_ID);
                         REWARD_CHANNEL.awaitMessages({max:1,time: 3000,errors: ['time']}).then(messageFromDiscordBot => {
                             const incommingMessage = messageFromDiscordBot.first();
                             if('embeds' in incommingMessage && incommingMessage['embeds'].length > 0 && 'description' in incommingMessage['embeds'][0]){
@@ -76,11 +76,11 @@ clientDiscordBot.once("ready", () => {
                                                 'Content-Type': 'application/json'
                                             }
                                         }
-                                    ).then((result: { data: { data: any[]; }; }) => {
+                                    ).then(result => {
                                         console.log(result.data.data[0]);
                                         clientTwitchBot.say("#soyelchecho", "Se completo");
                                         //says that the xp reward was not possible to asign.
-                                    }).catch((error: any) => {
+                                    }).catch(error => {
                                         console.log(error);
                                         //says that was a problem trying to complete or fullfield your reward
                                     })
