@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "mocha",
+    "test": "echo \"Error: no test specified\"",
     "start": "node index.js",
     "dev": "nodemon index.js"
   },
