@@ -1,11 +1,11 @@
 // <------------ IMPORTS ---------------->
-import * as tmi from 'tmi.js';  // This is the twitch library
-import { Client, Intents } from "discord.js"; // This is the Discord Official Library
+const tmi = require('tmi.js');  // This is the twitch library
+const { Client, Intents } = require("discord.js"); // This is the Discord Official Library
 const dotenv = require('dotenv'); // Environment library to read env variables
-import * as Discord from "discord-user-bots";
+const Discord = require("discord-user-bots");
 const axios = require('axios'); // HTTP requests library
-import { StaticAuthProvider } from '@twurple/auth';
-import { PubSubClient, PubSubRedemptionMessage } from '@twurple/pubsub';
+const { StaticAuthProvider }= require('@twurple/auth');
+const { PubSubClient } = require('@twurple/pubsub');
 
 
 
