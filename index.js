@@ -7,6 +7,8 @@ const axios = require('axios'); // HTTP requests library
 const { StaticAuthProvider }= require('@twurple/auth');
 const { PubSubClient } = require('@twurple/pubsub');
 
+require('azure-app-service-keepalive').keepalive();
+
 
 
 // <------------- SET UP ---------->
