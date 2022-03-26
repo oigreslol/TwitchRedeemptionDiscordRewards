@@ -19,6 +19,8 @@ const userBotClientDiscord = new Discord.Client(process.env.DISCORD_CHECHO_TOKEN
 const clientDiscordBot = new Client({
     intents : [
         Intents.FLAGS.GUILDS,
+        Intents.FLAGS.GUILD_PRESENCES,
+        Intents.FLAGS.GUILD_MEMBERS,
         Intents.FLAGS.GUILD_MESSAGES
     ],
     partials: ['MESSAGE', 'CHANNEL', 'USER', 'REACTION']
@@ -54,21 +56,15 @@ clientDiscordBot.once("ready", () => {
 });
 
 (async ()  => {
-    await pubSubClient.onRedemption(await pubSubClient.registerUserListener(authProvider), (message) => {
-        console.log(message);
-        const list = client.guilds.get("335507048017952771");
-        console.log(list);
-        list.members.forEach(member => console.log(member.user.username));
+    await pubSubClient.onRedemption(await pubSubClient.registerUserListener(authProvider), (message) => {        
         if(message.rewardId == process.env.TWITCH_1000_XP_ID){
-            console.log('Is valid Message');
-            console.log(regexExpression.test(message.message));
             if(regexExpression.test(message.message)){
                 const discordUser = clientDiscordBot.users.cache.find(u => u.tag === message.message);
-                console.log(discordUser);
                 if(discordUser != undefined && discordUser != null){
-                    userBotClientDiscord.send(process.env.DISCORD_CHANNEL_REWARDS_ID,{ content:`.addxp <@${discordUser.id}> 1000`}).then(() => {
+                    userBotClientDiscord.send(process.env.DISCORD_CHANNEL_REWARDS_ID,{ content:`.addxp <@${discordUser.id}> 10`}).then(() => {
                         const REWARD_CHANNEL = clientDiscordBot.channels.cache.get(process.env.DISCORD_CHANNEL_REWARDS_ID);
-                        REWARD_CHANNEL.awaitMessages({max:1,time: 3000,errors: ['time']}).then(messageFromDiscordBot => {
+                        const msg_filter = (m) => m.author.id === '706935674800177193';
+                        REWARD_CHANNEL.awaitMessages({ilter: msg_filter,max:1,time: 3000,errors: ['time']}).then(messageFromDiscordBot => {
                             const incommingMessage = messageFromDiscordBot.first();
                             if('embeds' in incommingMessage && incommingMessage['embeds'].length > 0 && 'description' in incommingMessage['embeds'][0]){
                                 if(incommingMessage['embeds'][0].description.includes('Successfully')){
@@ -81,33 +77,90 @@ clientDiscordBot.once("ready", () => {
                                                 'Content-Type': 'application/json'
                                             }
                                         }
-                                    ).then(result => {
-                                        console.log(result.data.data[0]);
-                                        clientTwitchBot.say("#soyelchecho", "Se completo");
+                                    ).then(() => {
+                                        clientTwitchBot.say("#soyelchecho", `@${message.userName} Se logro dar la XP al usuario de discord que ingresaste :D`);
                                         //says that the xp reward was not possible to asign.
                                     }).catch(error => {
                                         console.log(error);
-                                        //says that was a problem trying to complete or fullfield your reward
+                                        clientTwitchBot.say("#soyelchecho", `@${message.userName} No pude actualizar tu recompensa a completada :/ lo debo hacer manual.`);
                                     })
                                 }else{
-                                    //says that the bot cant assign the xp so I will give back your points
+                                    axios.patch(`${process.env.TWITCH_API_URL}?broadcaster_id=${process.env.TWITCH_BROADCASTER_ID}&reward_id=${message.rewardId}&id=${message.id}`,
+                                        {'status': 'CANCELED'},
+                                        {headers:{
+                                                'client-id': process.env.TWITCH_CLIENT_ID,
+                                                'Authorization' : `Bearer ${process.env.TWITCH_ACCESS_TOKEN_MANAGE_REEDEM }`,
+                                                'Content-Type': 'application/json'
+                                        }
+                                    }).then(() => {
+                                        clientTwitchBot.say("#soyelchecho", `@${message.userName} El bot no pude encontrar al usuario de discord que quieres darle la xp, te devuelvo tus puntos..`);
+                                    }).catch(error => {
+                                        console.log(error);
+                                        clientTwitchBot.say("#soyelchecho", `@${message.userName} No pude actualizar tu recompensa a cancelada :/ no se te devolveran los puntos, lo debo hacer manual.`);
+                                    });
                                 }
                             }
                         }).catch(error => {
                             console.log(error);
-                            //says that the bot dont respond so I will give back your points
+                            axios.patch(`${process.env.TWITCH_API_URL}?broadcaster_id=${process.env.TWITCH_BROADCASTER_ID}&reward_id=${message.rewardId}&id=${message.id}`,
+                                {'status': 'CANCELED'},
+                                {headers:{
+                                        'client-id': process.env.TWITCH_CLIENT_ID,
+                                        'Authorization' : `Bearer ${process.env.TWITCH_ACCESS_TOKEN_MANAGE_REEDEM }`,
+                                        'Content-Type': 'application/json'
+                                }
+                            }).then(() => {
+                                clientTwitchBot.say("#soyelchecho", `@${message.userName} Hubo un problema y el bot de los niveles no te asigno la experience, te devuelvo tus puntos.`);
+                            }).catch(error => {
+                                console.log(error);
+                                clientTwitchBot.say("#soyelchecho", `@${message.userName} No pude actualizar tu recompensa a cancelada :/ no se te devolveran los puntos, lo debo hacer manual.`);
+                            });
                         })
                     }).catch(error => {
                         console.log(error);
-                        //say in the chat that was an error sending the message to the discord and say that I will give back your points
+                        axios.patch(`${process.env.TWITCH_API_URL}?broadcaster_id=${process.env.TWITCH_BROADCASTER_ID}&reward_id=${message.rewardId}&id=${message.id}`,
+                            {'status': 'CANCELED'},
+                            {headers:{
+                                    'client-id': process.env.TWITCH_CLIENT_ID,
+                                    'Authorization' : `Bearer ${process.env.TWITCH_ACCESS_TOKEN_MANAGE_REEDEM }`,
+                                    'Content-Type': 'application/json'
+                            }
+                        }).then(() => {
+                            clientTwitchBot.say("#soyelchecho", `@${message.userName} Hubo un problema y no se pudo mandar tu mensaje a discord, te devuelvo tus puntos.`);
+                        }).catch(error => {
+                            console.log(error);
+                            clientTwitchBot.say("#soyelchecho", `@${message.userName} No pude actualizar tu recompensa a cancelada :/ no se te devolveran los puntos, lo debo hacer manual.`);
+                        });
                     });
                 }else{
-                    //cant find the user
-                    //say in the chat that the user couldnt be find in the discord and say that I will give back your points
-                    //update the reward to canceled or unfilled
+                    axios.patch(`${process.env.TWITCH_API_URL}?broadcaster_id=${process.env.TWITCH_BROADCASTER_ID}&reward_id=${message.rewardId}&id=${message.id}`,
+                        {'status': 'CANCELED'},
+                        {headers:{
+                                'client-id': process.env.TWITCH_CLIENT_ID,
+                                'Authorization' : `Bearer ${process.env.TWITCH_ACCESS_TOKEN_MANAGE_REEDEM }`,
+                                'Content-Type': 'application/json'
+                        }
+                    }).then(() => {
+                        clientTwitchBot.say("#soyelchecho", `@${message.userName} El bot no pude encontrar al usuario de discord que quieres darle la xp, te devuelvo tus puntos..`);
+                    }).catch(error => {
+                        console.log(error);
+                        clientTwitchBot.say("#soyelchecho", `@${message.userName} No pude actualizar tu recompensa a cancelada :/ no se te devolveran los puntos, lo debo hacer manual.`);
+                    });
                 }
             }else{
-                // No es un Id de discord valido, devolver 
+                axios.patch(`${process.env.TWITCH_API_URL}?broadcaster_id=${process.env.TWITCH_BROADCASTER_ID}&reward_id=${message.rewardId}&id=${message.id}`,
+                    {'status': 'CANCELED'},
+                    {headers:{
+                            'client-id': process.env.TWITCH_CLIENT_ID,
+                            'Authorization' : `Bearer ${process.env.TWITCH_ACCESS_TOKEN_MANAGE_REEDEM }`,
+                            'Content-Type': 'application/json'
+                    }
+                }).then(() => {
+                    clientTwitchBot.say("#soyelchecho", `@${message.userName} Tu mensaje no coincide con un tag valido de discord, se te devolveran los puntos.`);
+                }).catch(error => {
+                    console.log(error);
+                    clientTwitchBot.say("#soyelchecho", `@${message.userName} No pude actualizar tu recompensa a cancelada :/ no se te devolveran los puntos, lo debo hacer manual.`);
+                });
             }
         }else{
             return;
