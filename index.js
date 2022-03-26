@@ -61,7 +61,7 @@ clientDiscordBot.once("ready", () => {
             if(regexExpression.test(message.message)){
                 const discordUser = clientDiscordBot.users.cache.find(u => u.tag === message.message);
                 if(discordUser != undefined && discordUser != null){
-                    userBotClientDiscord.send(process.env.DISCORD_CHANNEL_REWARDS_ID,{ content:`.addxp <@${discordUser.id}> 10`}).then(() => {
+                    userBotClientDiscord.send(process.env.DISCORD_CHANNEL_REWARDS_ID,{ content:`.addxp <@${discordUser.id}> 1000`}).then(() => {
                         const REWARD_CHANNEL = clientDiscordBot.channels.cache.get(process.env.DISCORD_CHANNEL_REWARDS_ID);
                         const msg_filter = (m) => m.author.id === '706935674800177193';
                         REWARD_CHANNEL.awaitMessages({ilter: msg_filter,max:1,time: 3000,errors: ['time']}).then(messageFromDiscordBot => {
