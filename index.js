@@ -55,9 +55,16 @@ clientDiscordBot.once("ready", () => {
 
 (async ()  => {
     await pubSubClient.onRedemption(await pubSubClient.registerUserListener(authProvider), (message) => {
+        console.log(message);
+        const list = client.guilds.get("335507048017952771");
+        console.log(list);
+        list.members.forEach(member => console.log(member.user.username));
         if(message.rewardId == process.env.TWITCH_1000_XP_ID){
+            console.log('Is valid Message');
+            console.log(regexExpression.test(message.message));
             if(regexExpression.test(message.message)){
                 const discordUser = clientDiscordBot.users.cache.find(u => u.tag === message.message);
+                console.log(discordUser);
                 if(discordUser != undefined && discordUser != null){
                     userBotClientDiscord.send(process.env.DISCORD_CHANNEL_REWARDS_ID,{ content:`.addxp <@${discordUser.id}> 1000`}).then(() => {
                         const REWARD_CHANNEL = clientDiscordBot.channels.cache.get(process.env.DISCORD_CHANNEL_REWARDS_ID);
